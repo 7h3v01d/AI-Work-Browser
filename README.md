@@ -16,6 +16,8 @@ Its only goal: make long AI coding conversations less painful to work in.
 
 ---
 
+<img width="1282" height="892" alt="screenshot" src="https://github.com/user-attachments/assets/8d969910-fa76-4acb-acac-c2996713b747" />
+
 ## What it does
 
 | Feature | Detail |
