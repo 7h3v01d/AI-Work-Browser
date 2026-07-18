@@ -16,8 +16,6 @@ Its only goal: make long AI coding conversations less painful to work in.
 
 ---
 
-<img width="1282" height="892" alt="screenshot" src="https://github.com/user-attachments/assets/8d969910-fa76-4acb-acac-c2996713b747" />
-
 ## What it does
 
 | Feature | Detail |
@@ -224,8 +222,51 @@ ai-work-browser/
 │                      WRAP_CODE_ON/OFF_JS — two separate IIFEs (no args)
 ├── settings.py        JSON persistence, DEFAULTS, KNOWN_SITES
 ├── requirements.txt
+├── requirements-dev.txt  Adds pytest / pytest-qt / pytest-forked
+├── pytest.ini
+├── tests/             pytest suite — see "Tests" below
 └── README.md
 ```
+
+## Tests
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
+
+The suite runs fully headless (`QT_QPA_PLATFORM=offscreen`, no display or
+GPU required — `tests/conftest.py` sets this automatically, nothing to
+export by hand) and needs no network access; every test that would
+otherwise navigate to a real AI site points `home_url`/`last_url` at
+`https://example.com` instead and never waits for that load to finish.
+
+| File | What it covers |
+|---|---|
+| `tests/test_settings.py` | `Settings`: defaults, `get`/`set`, JSON persistence, migration of old files, corrupt-file recovery, non-fatal save failures. Pure Python, no Qt. |
+| `tests/test_page_injection.py` | Structural checks on every generated JS/CSS string in `page_injection.py` — selector dedup, flag interpolation, JSON-escaping of user CSS, etc. Fast, no Qt widgets. |
+| `tests/test_page_injection_integration.py` | Runs that same JS **for real** inside a headless `QWebEnginePage` against synthetic conversation HTML — collapse/expand round-trips, compact-mode CSS injection, code wrapping, text extraction, and the copy-to-clipboard script. This is what caught a real bug (see below). |
+| `tests/test_browser_window.py` | `BrowserWindow`, `SettingsDialog`, `ClientHintInterceptor`, and `_OAuthPopup` using real (offscreen) Qt widgets via `pytest-qt`: navigation/URL-bar handling, the domain allowlist, compact mode, collapse/expand, copy/save actions, the debug panel, settings persistence, and window-geometry save/restore. |
+| `tests/test_main.py` | Import smoke test for `main.py`. |
+
+**Bug the integration tests caught:** `COPY_PLAIN_TEXT_JS` and
+`EXTRACT_TEXT_JS` were defined as ordinary (non-raw) triple-quoted Python
+strings containing JS snippets like `br.replaceWith('\n')`. Python was
+silently turning that `\n` into a literal newline *character* embedded
+inside a single-quoted JS string literal — invalid JS syntax that would
+throw at runtime. It only surfaces when the script is actually executed
+against a page, which is exactly what the integration tests do; both
+constants are now `r"""..."""` raw strings.
+
+**Why `pytest-forked` is in `requirements-dev.txt` but not on by default:**
+QtWebEngine's Chromium backend can occasionally segfault during Python
+interpreter shutdown, after a test has already completed and passed — a
+known Qt/Chromium teardown-ordering issue, not a test failure. On
+Linux/macOS you can run `pytest --forked` to put each test in its own
+subprocess so that crash can never affect the overall exit code. This is
+**not** the default (and not in `addopts`) because `pytest-forked` uses
+`os.fork()`, which doesn't exist on Windows — forcing it on would break the
+suite there outright. If you're on Windows, just run `pytest`.
 
 ### Settings → runtime wiring
 

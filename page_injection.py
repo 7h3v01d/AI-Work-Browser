@@ -460,7 +460,7 @@ EXPAND_ALL_JS: str = """
 # Returns the text string so Python can use QApplication.clipboard()
 # as a fallback when navigator.clipboard is blocked.
 
-COPY_PLAIN_TEXT_JS: str = """
+COPY_PLAIN_TEXT_JS: str = r"""
 (function() {
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed) {
@@ -534,7 +534,7 @@ REMOVE_USER_STYLESHEET_JS: str = """
 # Extract page as text
 # ---------------------------------------------------------------------------
 
-EXTRACT_TEXT_JS: str = """
+EXTRACT_TEXT_JS: str = r"""
 (function() {
     function extractNode(node, out) {
         if (node.nodeType === Node.TEXT_NODE) { out.push(node.textContent); return; }
