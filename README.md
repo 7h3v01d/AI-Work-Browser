@@ -5,6 +5,10 @@ Built with Python 3.11 + PySide6 + QtWebEngine.
 
 ---
 
+<img width="1282" height="892" alt="screenshot" src="https://github.com/user-attachments/assets/bc825e9e-cb7a-4c53-b8fc-d593966f96cb" />
+
+---
+
 ## What it is
 
 A focused productivity wrapper — a thin browser shell around Claude,
